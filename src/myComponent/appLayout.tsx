@@ -2,85 +2,140 @@ import {
   Box,
   Flex,
   Text,
-  Button,
-  useBreakpointValue,
   HStack,
+  Tabs,
+  // useColorModeValue,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import { FaPiggyBank, FaMoneyBillWave, FaCalculator } from "react-icons/fa";
 import { ColorMode } from "./colorMode";
+import FixedDepositCalculator from "./fixedDeposit";
 
 const AppLayout = () => {
-  const isMobile = useBreakpointValue({ base: true, md: false });
-
-  // Track which tab is active — default is Term Deposit
-  const [activeTab, setActiveTab] = useState<"term" | "loan">("term");
+  // const bg = useColorModeValue("white", "gray.900");
+  // const border = useColorModeValue("gray.200", "gray.700");
+  // const tabHover = useColorModeValue("gray.100", "gray.800");
 
   return (
     <Flex direction="column" height="100vh">
-      {/* Top Navbar */}
-      <Box p={4} fontWeight="bold" fontSize="lg" textAlign="center">
-        <Flex justifyContent="space-between">
-          <FaCalculator color="red" />
+      {/* NAVBAR */}
+      <Box
+        px={6}
+        py={4}
+        borderBottom="1px solid"
+        borderColor="gray.200"
+        position="sticky"
+        top="0"
+        zIndex="1000"
+      >
+        <Flex justifyContent="space-between" alignItems="center">
+          <HStack>
+            <FaCalculator size={22} color="red" />
+            <Text fontWeight="bold" fontSize="xl">
+              Finance Tools
+            </Text>
+          </HStack>
+
           <ColorMode />
         </Flex>
       </Box>
 
-      <Flex flex="1">
-        {/* LEFT SIDEBAR (hidden on mobile) */}
-        {!isMobile && (
-          <Box w="200px" p={4} borderRight="1px solid #ddd">
-            {/* BUTTONS */}
-            <Flex direction="column" gap={3}>
-              <Button
-                colorScheme={activeTab === "term" ? "blue" : "gray"}
-                variant={activeTab === "term" ? "solid" : "outline"}
-                onClick={() => setActiveTab("term")}
-                width="100%"
-              >
-                <HStack>
-                  <FaPiggyBank size={20} />
-                  <Text> Term Deposit</Text>
-                </HStack>
-              </Button>
+      {/* TABS & MAIN */}
+      <Tabs.Root
+        defaultValue="term"
+        orientation="horizontal"
+        height="100%"
+        display="flex"
+        flexDirection="column"
+      >
+        {/* TAB HEADERS */}
+        <Tabs.List
+          borderBottom="1px solid"
+          // borderColor={border}
+          // bg={bg}
+          px={4}
+          py={2}
+          display="flex"
+          justifyContent="space-evenly"
+          gap={2}
+        >
+          <Tabs.Trigger
+            value="term"
+            px={4}
+            py={3}
+            borderRadius="md"
+            fontWeight="600"
+            width="100%"
+            display="flex"
+            justifyContent="center"
+            gap={2}
+            alignItems="center"
+            // _hover={{ bg: tabHover }}
+            _selected={{ color: "blue.500", fontWeight: "bold" }}
+          >
+            <FaPiggyBank />
+            Term Deposit
+          </Tabs.Trigger>
 
-              <Button
-                colorScheme={activeTab === "loan" ? "blue" : "gray"}
-                variant={activeTab === "loan" ? "solid" : "outline"}
-                onClick={() => setActiveTab("loan")}
-                width="100%"
-              >
-                <HStack>
-                  <FaMoneyBillWave size={20} />
-                  <Text> Loan</Text>
-                </HStack>
-              </Button>
-            </Flex>
-          </Box>
-        )}
+          <Tabs.Trigger
+            value="loan"
+            px={4}
+            py={3}
+            borderRadius="md"
+            fontWeight="600"
+            width="100%"
+            display="flex"
+            justifyContent="center"
+            gap={2}
+            alignItems="center"
+            // _hover={{ bg: tabHover }}
+            _selected={{ color: "blue.500", fontWeight: "bold" }}
+          >
+            <FaMoneyBillWave />
+            Loan
+          </Tabs.Trigger>
+
+          <Tabs.Indicator height="3px" bg="blue.500" bottom="0" />
+        </Tabs.List>
 
         {/* MAIN CONTENT */}
-        <Flex flex="1" p={4} gap={4}>
-          {isMobile ? (
-            // 📱 MOBILE — show single main content
-            <Box flex="1" p={4} border="1px solid #ddd" borderRadius="md">
-              {activeTab === "term" ? "Term Deposit Content" : "Loan Content"}
-            </Box>
-          ) : (
-            // 💻 DESKTOP — split main into two equal parts
-            <>
-              <Box flex="1" p={4} border="1px solid #ddd" borderRadius="md">
-                {activeTab === "term" ? "Term Deposit Content" : "Loan Content"}
+        <Flex flex="1" overflowY="auto" justifyContent="center" p={4}>
+          <Box
+            width="100%"
+            maxW={{ base: "100%", md: "700px" }}
+            p={{ base: 0, md: 4 }}
+          >
+            {/* Term Deposit Content */}
+            <Tabs.Content value="term">
+              <Box
+                border="1px solid"
+                // borderColor={border}
+                borderRadius="lg"
+                p={4}
+                shadow="sm"
+                // bg={bg}
+              >
+                <FixedDepositCalculator />
               </Box>
+            </Tabs.Content>
 
-              <Box flex="1" p={4} border="1px solid #ddd" borderRadius="md">
-                {/* You can add more content here later */}
-                Additional Info
+            {/* Loan Content */}
+            <Tabs.Content value="loan">
+              <Box
+                textAlign="center"
+                fontSize="lg"
+                p={6}
+                border="1px solid"
+                // borderColor={border}
+                borderRadius="lg"
+                shadow="sm"
+                // bg={bg}
+              >
+                Loan Content (Coming soon)
               </Box>
-            </>
-          )}
+            </Tabs.Content>
+          </Box>
         </Flex>
-      </Flex>
+      </Tabs.Root>
     </Flex>
   );
 };
