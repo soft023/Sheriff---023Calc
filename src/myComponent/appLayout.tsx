@@ -9,6 +9,7 @@ import {
 import { FaPiggyBank, FaMoneyBillWave, FaCalculator } from "react-icons/fa";
 import { ColorMode } from "./colorMode";
 import FixedDepositCalculator from "./fixedDeposit";
+import LoanCalculator from "./loanCalc";
 
 const AppLayout = () => {
   // const bg = useColorModeValue("white", "gray.900");
@@ -130,7 +131,7 @@ const AppLayout = () => {
                 shadow="sm"
                 // bg={bg}
               >
-                Loan Content (Coming soon)
+                <LoanCalculator />
               </Box>
             </Tabs.Content>
           </Box>
