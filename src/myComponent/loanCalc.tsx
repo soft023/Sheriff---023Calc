@@ -10,7 +10,6 @@ import {
   Text,
   Card,
   CardBody,
-  HStack,
   RadioGroup,
 } from "@chakra-ui/react";
 
@@ -25,8 +24,6 @@ type ScheduleRow = {
 };
 
 const unformatNumber = (value: string) => Number(value.replace(/,/g, ""));
-const formatNumber = (num: number) =>
-  isNaN(num) ? "" : Math.round(num * 100) / 100;
 
 const LoanCalculator: React.FC = () => {
   const [amount, setAmount] = useState("");
@@ -40,14 +37,14 @@ const LoanCalculator: React.FC = () => {
 
   const items = [
     { label: "Flat Rate", value: "flat" },
-    { label: "Reducing EM", value: "reducing_equal" },
+    { label: "Reducing (EMI)", value: "reducing_equal" },
     { label: "Reducing Balance", value: "reducing_declining" },
   ];
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/,/g, "");
     if (!/^\d*$/.test(raw)) return;
-    setAmount(raw === "" ? "" : Number(raw).toLocaleString("en-US"));
+    setAmount(raw === "" ? "" : Number(raw).toLocaleString());
   };
 
   const generateSchedule = (
@@ -59,13 +56,11 @@ const LoanCalculator: React.FC = () => {
     const schedule: ScheduleRow[] = [];
     const r = annualRate / 12 / 100;
 
-    // --- Flat Rate ---
+    // Flat
     if (type === "flat") {
-      const years = tenorMonths / 12;
-      const totalInterest = principal * (annualRate / 100) * years;
+      const totalInterest = principal * (annualRate / 100) * (tenorMonths / 12);
       const monthlyInterest = totalInterest / tenorMonths;
       const monthlyPrincipal = principal / tenorMonths;
-      const monthlyPayment = monthlyPrincipal + monthlyInterest;
       let bal = principal;
 
       for (let m = 1; m <= tenorMonths; m++) {
@@ -74,7 +69,7 @@ const LoanCalculator: React.FC = () => {
           month: m,
           interest: monthlyInterest,
           principal: monthlyPrincipal,
-          payment: monthlyPayment,
+          payment: monthlyPrincipal + monthlyInterest,
           balance: Math.max(0, bal),
         });
       }
@@ -86,23 +81,24 @@ const LoanCalculator: React.FC = () => {
       };
     }
 
-    // --- Amortized (Equal Monthly Repayment) ---
+    // Reducing – Equal EMI
     if (type === "reducing_equal") {
       const emi =
         (principal * r * Math.pow(1 + r, tenorMonths)) /
         (Math.pow(1 + r, tenorMonths) - 1);
+
       let bal = principal;
       let totalInt = 0;
 
       for (let m = 1; m <= tenorMonths; m++) {
-        const interestPaid = bal * r;
-        const principalPaid = emi - interestPaid;
+        const interest = bal * r;
+        const principalPaid = emi - interest;
         bal -= principalPaid;
-        totalInt += interestPaid;
+        totalInt += interest;
 
         schedule.push({
           month: m,
-          interest: interestPaid,
+          interest,
           principal: principalPaid,
           payment: emi,
           balance: m === tenorMonths ? 0 : Math.max(0, bal),
@@ -116,137 +112,83 @@ const LoanCalculator: React.FC = () => {
       };
     }
 
-    // --- Straight Line Reducing (Declining Payment) ---
-    if (type === "reducing_declining") {
-      const monthlyPrincipal = principal / tenorMonths;
-      let bal = principal;
-      let totalInt = 0;
+    // Reducing – Declining
+    const monthlyPrincipal = principal / tenorMonths;
+    let bal = principal;
+    let totalInt = 0;
 
-      for (let m = 1; m <= tenorMonths; m++) {
-        const interestPaid = bal * r;
-        const payment = monthlyPrincipal + interestPaid;
-        bal -= monthlyPrincipal;
-        totalInt += interestPaid;
+    for (let m = 1; m <= tenorMonths; m++) {
+      const interest = bal * r;
+      bal -= monthlyPrincipal;
+      totalInt += interest;
 
-        schedule.push({
-          month: m,
-          interest: interestPaid,
-          principal: monthlyPrincipal,
-          payment,
-          balance: m === tenorMonths ? 0 : Math.max(0, bal),
-        });
-      }
-
-      return {
-        schedule,
-        totalInterest: totalInt,
-        totalPayable: principal + totalInt,
-      };
+      schedule.push({
+        month: m,
+        interest,
+        principal: monthlyPrincipal,
+        payment: monthlyPrincipal + interest,
+        balance: m === tenorMonths ? 0 : Math.max(0, bal),
+      });
     }
 
-    return { schedule, totalInterest: 0, totalPayable: principal };
+    return {
+      schedule,
+      totalInterest: totalInt,
+      totalPayable: principal + totalInt,
+    };
   };
 
   const handleCalculate = () => {
     if (!amount || !tenor || !rate) return;
 
-    const P = unformatNumber(amount);
-    const T = Number(tenor);
-    const R = Number(rate);
+    const result = generateSchedule(
+      unformatNumber(amount),
+      Number(rate),
+      Number(tenor),
+      loanType
+    );
 
-    if (isNaN(P) || isNaN(T) || isNaN(R) || P <= 0 || T <= 0) return;
-
-    const {
-      schedule: sch,
-      totalInterest: ti,
-      totalPayable: tp,
-    } = generateSchedule(P, R, T, loanType);
-
-    setSchedule(sch);
-    setTotalInterest(ti);
-    setTotalPayable(tp);
+    setSchedule(result.schedule);
+    setTotalInterest(result.totalInterest);
+    setTotalPayable(result.totalPayable);
   };
 
   return (
-    <Flex direction="column" gap={6}>
+    <Flex direction="column" gap={{ base: 4, md: 6 }}>
       {/* FORM */}
-      <Card.Root shadow="md">
+      <Card.Root>
         <CardBody>
-          <VStack align="stretch">
-            <Fieldset.Root>
+          <Fieldset.Root>
+            <VStack gap={4}>
               <Field.Root>
                 <Field.Label>Loan Amount (₦)</Field.Label>
-                <Input
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  onBlur={() => {
-                    const raw = amount.replace(/,/g, "");
-                    if (raw === "") return;
-                    setAmount(Number(raw).toLocaleString("en-US"));
-                  }}
-                />
+                <Input value={amount} onChange={handleAmountChange} />
               </Field.Root>
 
               <Field.Root>
                 <Field.Label>Tenor (months)</Field.Label>
                 <Input
                   type="number"
-                  placeholder="Enter tenor in months"
                   value={tenor}
                   onChange={(e) => setTenor(e.target.value)}
                 />
               </Field.Root>
 
               <Field.Root>
-                <Field.Label htmlFor="loanAmount">
-                  Interest Rate (%)
-                </Field.Label>
+                <Field.Label>Interest Rate (%)</Field.Label>
                 <Input
                   type="number"
-                  placeholder="Enter annual interest rate"
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
                 />
               </Field.Root>
 
               <Field.Root>
-                {/* <Field.Label>Loan Type</Field.Label>
                 <RadioGroup.Root
                   value={loanType}
-                  onValueChange={(details) =>
-                    setLoanType(details.value as LoanType)
-                  }
+                  onValueChange={(e) => setLoanType(e.value as LoanType)}
                 >
-                  <HStack>
-                    <RadioGroup.Item value="flat">
-                      <RadioGroup.ItemControl />
-                      <RadioGroup.ItemText>Flat Rate</RadioGroup.ItemText>
-                    </RadioGroup.Item>
-
-                    <RadioGroup.Item value="reducing_equal">
-                      <RadioGroup.ItemControl />
-                      <RadioGroup.ItemText>
-                        Amortized (EMI – Equal Monthly)
-                      </RadioGroup.ItemText>
-                    </RadioGroup.Item>
-
-                    <RadioGroup.Item value="reducing_declining">
-                      <RadioGroup.ItemControl />
-                      <RadioGroup.ItemText>
-                        Straight Line Reducing (Declining Payment)
-                      </RadioGroup.ItemText>
-                    </RadioGroup.Item>
-                  </HStack>
-                </RadioGroup.Root> */}
-
-                <RadioGroup.Root
-                  value={loanType}
-                  onValueChange={(e) =>
-                    setLoanType((e.value as LoanType) ?? loanType)
-                  }
-                >
-                  <HStack gap="6">
+                  <Flex direction={{ base: "column", sm: "row" }} gap={3}>
                     {items.map((item) => (
                       <RadioGroup.Item key={item.value} value={item.value}>
                         <RadioGroup.ItemHiddenInput />
@@ -254,126 +196,101 @@ const LoanCalculator: React.FC = () => {
                         <RadioGroup.ItemText>{item.label}</RadioGroup.ItemText>
                       </RadioGroup.Item>
                     ))}
-                  </HStack>
+                  </Flex>
                 </RadioGroup.Root>
               </Field.Root>
 
-              <Button
-                colorScheme="blue"
-                width="100%"
-                onClick={handleCalculate}
-                disabled={!amount || !tenor || !rate}
-              >
+              <Button w="100%" onClick={handleCalculate}>
                 Calculate
               </Button>
-            </Fieldset.Root>
-          </VStack>
+            </VStack>
+          </Fieldset.Root>
         </CardBody>
       </Card.Root>
 
       {/* SUMMARY */}
-      {totalInterest !== null && totalPayable !== null && (
-        <Card.Root shadow="lg" border="1px solid #e2e8f0">
+      {totalInterest !== null && (
+        <Card.Root>
           <CardBody>
-            <Card.Title mb={3}>Loan Summary</Card.Title>
-            <VStack align="stretch">
+            <VStack align="stretch" fontSize={{ base: "sm", md: "md" }}>
               <Text>
-                <b>Loan Amount:</b> ₦{unformatNumber(amount).toLocaleString()}
+                <b>Total Interest:</b> ₦{totalInterest.toLocaleString()}
               </Text>
               <Text>
-                <b>Tenor:</b> {tenor} months
-              </Text>
-              <Text>
-                <b>Rate:</b> {rate}%
-              </Text>
-              <Text>
-                <b>Loan Type:</b>{" "}
-                {loanType === "flat"
-                  ? "Flat Rate"
-                  : loanType === "reducing_equal"
-                  ? "Amortized (EMI – Equal Monthly)"
-                  : "Straight Line Reducing (Declining Payment)"}
-              </Text>
-              <Text>
-                <b>Total Interest:</b> ₦
-                {Number(totalInterest).toFixed(2).toLocaleString()}
-              </Text>
-              <Text>
-                <b>Total Payable:</b> ₦
-                {Number(totalPayable).toFixed(2).toLocaleString()}
+                <b>Total Payable:</b> ₦{totalPayable?.toLocaleString()}
               </Text>
             </VStack>
           </CardBody>
         </Card.Root>
       )}
 
-      {/* REPAYMENT SCHEDULE */}
+      {/* SCHEDULE */}
       {schedule.length > 0 && (
-        <Box mt={2} overflowX="auto">
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ fontWeight: "bold" }}>
-                <th style={{ textAlign: "left", padding: "8px" }}>Month</th>
-                <th style={{ textAlign: "right", padding: "8px" }}>
-                  Interest (₦)
-                </th>
-                <th style={{ textAlign: "right", padding: "8px" }}>
-                  Principal (₦)
-                </th>
-                <th style={{ textAlign: "right", padding: "8px" }}>
-                  Total Payment (₦)
-                </th>
-                <th style={{ textAlign: "right", padding: "8px" }}>
-                  Balance (₦)
-                </th>
-              </tr>
-            </thead>
+        <>
+          {/* Desktop Table */}
+          <Box display={{ base: "none", md: "block" }} overflowX="auto">
+            <Box minW="700px">
+              <table width="100%" style={{ borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", fontWeight: "bold" }}>
+                      Month
+                    </th>
+                    <th style={{ textAlign: "left", fontWeight: "bold" }}>
+                      Interest
+                    </th>
+                    <th style={{ textAlign: "left", fontWeight: "bold" }}>
+                      Principal
+                    </th>
+                    <th style={{ textAlign: "left", fontWeight: "bold" }}>
+                      Payment
+                    </th>
+                    <th style={{ textAlign: "left", fontWeight: "bold" }}>
+                      Balance
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedule.map((r) => (
+                    <tr key={r.month}>
+                      <td>{r.month}</td>
+                      <td>{Number(r.interest.toFixed(2)).toLocaleString()}</td>
+                      <td>{Number(r.principal.toFixed(2)).toLocaleString()}</td>
+                      <td>{Number(r.payment.toFixed(2)).toLocaleString()}</td>
+                      <td>{Number(r.balance.toFixed(2)).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Box>
+          </Box>
 
-            <tbody>
-              {schedule.map((row) => (
-                <tr
-                  key={row.month}
-                  style={{ borderBottom: "1px solid #f0f4f8" }}
-                >
-                  <td style={{ padding: "8px" }}>{row.month}</td>
-                  <td style={{ padding: "8px", textAlign: "right" }}>
-                    {Number(row.interest.toFixed(2)).toLocaleString()}
-                  </td>
-                  <td style={{ padding: "8px", textAlign: "right" }}>
-                    {Number(row.principal.toFixed(2)).toLocaleString()}
-                  </td>
-                  <td style={{ padding: "8px", textAlign: "right" }}>
-                    {Number(row.payment.toFixed(2)).toLocaleString()}
-                  </td>
-                  <td style={{ padding: "8px", textAlign: "right" }}>
-                    {Number(row.balance.toFixed(2)).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-
-              {/* TOTAL ROW */}
-              <tr style={{ fontWeight: "bold" }}>
-                <td style={{ padding: "8px" }}>TOTAL</td>
-                <td style={{ padding: "8px", textAlign: "right" }}>
-                  {Number(
-                    schedule.reduce((a, b) => a + b.interest, 0).toFixed(2)
-                  ).toLocaleString()}
-                </td>
-                <td style={{ padding: "8px", textAlign: "right" }}>
-                  {Number(
-                    schedule.reduce((a, b) => a + b.principal, 0).toFixed(2)
-                  ).toLocaleString()}
-                </td>
-                <td style={{ padding: "8px", textAlign: "right" }}>
-                  {Number(
-                    schedule.reduce((a, b) => a + b.payment, 0).toFixed(2)
-                  ).toLocaleString()}
-                </td>
-                <td style={{ padding: "8px", textAlign: "right" }}>0</td>
-              </tr>
-            </tbody>
-          </table>
-        </Box>
+          {/* Mobile Cards */}
+          <VStack display={{ base: "flex", md: "none" }} gap={3}>
+            {schedule.map((r) => (
+              <Card.Root key={r.month}>
+                <CardBody>
+                  <Text>
+                    <b>Month:</b> {r.month}
+                  </Text>
+                  <Text>
+                    Interest: ₦{Number(r.interest.toFixed(2)).toLocaleString()}
+                  </Text>
+                  <Text>
+                    Principal: ₦
+                    {Number(r.principal.toFixed(2)).toLocaleString()}
+                  </Text>
+                  <Text>
+                    Payment: ₦{Number(r.payment.toFixed(2)).toLocaleString()}
+                  </Text>
+                  <Text>
+                    Balance: ₦{Number(r.balance.toFixed(2)).toLocaleString()}
+                  </Text>
+                </CardBody>
+              </Card.Root>
+            ))}
+          </VStack>
+        </>
       )}
     </Flex>
   );

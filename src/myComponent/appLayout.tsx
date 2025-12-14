@@ -1,8 +1,9 @@
-import { Box, Flex, Text, HStack, Tabs } from "@chakra-ui/react";
+import { Box, Flex, Text, HStack, Tabs, Tooltip } from "@chakra-ui/react";
 import { FaPiggyBank, FaMoneyBillWave, FaCalculator } from "react-icons/fa";
 import { ColorMode } from "./colorMode";
 import FixedDepositCalculator from "./fixedDeposit";
 import LoanCalculator from "./loanCalc";
+import Footer from "./footer";
 
 const AppLayout = () => {
   return (
@@ -21,7 +22,7 @@ const AppLayout = () => {
         <Flex justifyContent="space-between" alignItems="center">
           <HStack>
             <FaCalculator size={22} color="red" />
-            <Text fontWeight="bold" fontSize={{ base: "lg", md: "xl" }}>
+            <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>
               Finance Tools
             </Text>
           </HStack>
@@ -116,6 +117,8 @@ const AppLayout = () => {
           </Box>
         </Flex>
       </Tabs.Root>
+
+      <Footer />
     </Flex>
   );
 };
