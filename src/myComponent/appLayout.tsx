@@ -31,7 +31,7 @@ const AppLayout = () => {
         <Flex justifyContent="space-between" alignItems="center">
           <HStack>
             <FaCalculator size={22} color="red" />
-            <Text fontWeight="bold" fontSize="xl">
+            <Text fontWeight="bold" fontSize="lg">
               Finance Tools
             </Text>
           </HStack>
@@ -51,7 +51,7 @@ const AppLayout = () => {
         {/* TAB HEADERS */}
         <Tabs.List
           borderBottom="1px solid"
-          // borderColor={border}
+          // borderColor="green"
           // bg={bg}
           px={4}
           py={2}
@@ -61,17 +61,17 @@ const AppLayout = () => {
         >
           <Tabs.Trigger
             value="term"
-            px={4}
-            py={3}
+            // px={4}
+            // py={3}
             borderRadius="md"
             fontWeight="600"
             width="100%"
             display="flex"
             justifyContent="center"
-            gap={2}
+            // gap={2}
             alignItems="center"
-            // _hover={{ bg: tabHover }}
-            _selected={{ color: "blue.500", fontWeight: "bold" }}
+            _hover={{ bg: "green.100" }}
+            _selected={{ color: "green.600", fontWeight: "bold" }}
           >
             <FaPiggyBank />
             Term Deposit
@@ -79,8 +79,8 @@ const AppLayout = () => {
 
           <Tabs.Trigger
             value="loan"
-            px={4}
-            py={3}
+            // px={4}
+            // py={3}
             borderRadius="md"
             fontWeight="600"
             width="100%"
@@ -88,14 +88,14 @@ const AppLayout = () => {
             justifyContent="center"
             gap={2}
             alignItems="center"
-            // _hover={{ bg: tabHover }}
-            _selected={{ color: "blue.500", fontWeight: "bold" }}
+            _hover={{ bg: "red.100" }}
+            _selected={{ color: "red.500", fontWeight: "bold" }}
           >
             <FaMoneyBillWave />
             Loan
           </Tabs.Trigger>
 
-          <Tabs.Indicator height="3px" bg="blue.500" bottom="0" />
+          <Tabs.Indicator height="5px" />
         </Tabs.List>
 
         {/* MAIN CONTENT */}
@@ -108,12 +108,12 @@ const AppLayout = () => {
             {/* Term Deposit Content */}
             <Tabs.Content value="term">
               <Box
-                border="1px solid"
-                // borderColor={border}
+                border="2px solid"
+                borderColor="green"
                 borderRadius="lg"
                 p={4}
                 shadow="sm"
-                // bg={bg}
+                // bg="green"
               >
                 <FixedDepositCalculator />
               </Box>
@@ -125,8 +125,8 @@ const AppLayout = () => {
                 textAlign="center"
                 fontSize="lg"
                 p={6}
-                border="1px solid"
-                // borderColor={border}
+                border="2px solid"
+                borderColor="red"
                 borderRadius="lg"
                 shadow="sm"
                 // bg={bg}
