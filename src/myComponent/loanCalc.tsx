@@ -40,7 +40,7 @@ const LoanCalculator: React.FC = () => {
 
   const items = [
     { label: "Flat Rate", value: "flat" },
-    { label: "Reducing - Equal MOnthly", value: "reducing_equal" },
+    { label: "Reducing EM", value: "reducing_equal" },
     { label: "Reducing Balance", value: "reducing_declining" },
   ];
 
