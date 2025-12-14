@@ -1,37 +1,27 @@
-import {
-  Box,
-  Flex,
-  Text,
-  HStack,
-  Tabs,
-  // useColorModeValue,
-} from "@chakra-ui/react";
+import { Box, Flex, Text, HStack, Tabs } from "@chakra-ui/react";
 import { FaPiggyBank, FaMoneyBillWave, FaCalculator } from "react-icons/fa";
 import { ColorMode } from "./colorMode";
 import FixedDepositCalculator from "./fixedDeposit";
 import LoanCalculator from "./loanCalc";
 
 const AppLayout = () => {
-  // const bg = useColorModeValue("white", "gray.900");
-  // const border = useColorModeValue("gray.200", "gray.700");
-  // const tabHover = useColorModeValue("gray.100", "gray.800");
-
   return (
-    <Flex direction="column" height="100vh">
+    <Flex direction="column" minHeight="100vh">
       {/* NAVBAR */}
       <Box
-        px={6}
+        px={{ base: 4, md: 6 }}
         py={4}
         borderBottom="1px solid"
         borderColor="gray.200"
         position="sticky"
         top="0"
         zIndex="1000"
+        // bg="white"
       >
         <Flex justifyContent="space-between" alignItems="center">
           <HStack>
             <FaCalculator size={22} color="red" />
-            <Text fontWeight="bold" fontSize="lg">
+            <Text fontWeight="bold" fontSize={{ base: "lg", md: "xl" }}>
               Finance Tools
             </Text>
           </HStack>
@@ -51,25 +41,20 @@ const AppLayout = () => {
         {/* TAB HEADERS */}
         <Tabs.List
           borderBottom="1px solid"
-          // borderColor="green"
-          // bg={bg}
-          px={4}
+          px={{ base: 2, md: 4 }}
           py={2}
           display="flex"
           justifyContent="space-evenly"
-          gap={2}
         >
           <Tabs.Trigger
             value="term"
-            // px={4}
-            // py={3}
             borderRadius="md"
             fontWeight="600"
-            width="100%"
+            flex="1"
             display="flex"
             justifyContent="center"
-            // gap={2}
             alignItems="center"
+            gap={2}
             _hover={{ bg: "green.100" }}
             _selected={{ color: "green.600", fontWeight: "bold" }}
           >
@@ -79,15 +64,13 @@ const AppLayout = () => {
 
           <Tabs.Trigger
             value="loan"
-            // px={4}
-            // py={3}
             borderRadius="md"
             fontWeight="600"
-            width="100%"
+            flex="1"
             display="flex"
             justifyContent="center"
-            gap={2}
             alignItems="center"
+            gap={2}
             _hover={{ bg: "red.100" }}
             _selected={{ color: "red.500", fontWeight: "bold" }}
           >
@@ -95,25 +78,24 @@ const AppLayout = () => {
             Loan
           </Tabs.Trigger>
 
-          <Tabs.Indicator height="5px" />
+          <Tabs.Indicator height="4px" />
         </Tabs.List>
 
         {/* MAIN CONTENT */}
-        <Flex flex="1" overflowY="auto" justifyContent="center" p={4}>
+        <Flex flex="1" justifyContent="center" overflowY="auto" p={4}>
           <Box
             width="100%"
             maxW={{ base: "100%", md: "700px" }}
-            p={{ base: 0, md: 4 }}
+            px={{ base: 2, md: 4 }}
           >
             {/* Term Deposit Content */}
             <Tabs.Content value="term">
               <Box
                 border="2px solid"
-                borderColor="green"
+                borderColor="green.300"
                 borderRadius="lg"
-                p={4}
+                p={{ base: 4, md: 6 }}
                 shadow="sm"
-                // bg="green"
               >
                 <FixedDepositCalculator />
               </Box>
@@ -122,14 +104,11 @@ const AppLayout = () => {
             {/* Loan Content */}
             <Tabs.Content value="loan">
               <Box
-                textAlign="center"
-                fontSize="lg"
-                p={6}
                 border="2px solid"
-                borderColor="red"
+                borderColor="red.300"
                 borderRadius="lg"
+                p={{ base: 4, md: 6 }}
                 shadow="sm"
-                // bg={bg}
               >
                 <LoanCalculator />
               </Box>

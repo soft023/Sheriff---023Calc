@@ -199,7 +199,9 @@ const LoanCalculator: React.FC = () => {
               </Field.Root>
 
               <Field.Root>
-                <Field.Label>Interest Rate (%)</Field.Label>
+                <Field.Label htmlFor="loanAmount">
+                  Interest Rate (%)
+                </Field.Label>
                 <Input
                   type="number"
                   placeholder="Enter annual interest rate"
