@@ -12,6 +12,7 @@ import {
   CardBody,
   RadioGroup,
 } from "@chakra-ui/react";
+import { getReducingDecliningInterest } from "./helper";
 
 type LoanType = "flat" | "reducing_equal" | "reducing_declining";
 
@@ -37,8 +38,8 @@ const LoanCalculator: React.FC = () => {
 
   const items = [
     { label: "Flat Rate", value: "flat" },
-    { label: "Reducing (EMI)", value: "reducing_equal" },
     { label: "Reducing Balance", value: "reducing_declining" },
+    { label: "Reducing But Flat", value: "reducing_equal" },
   ];
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,11 +55,11 @@ const LoanCalculator: React.FC = () => {
     type: LoanType
   ) => {
     const schedule: ScheduleRow[] = [];
-    const r = annualRate / 12 / 100;
+    const r = annualRate / 100;
 
     // Flat
     if (type === "flat") {
-      const totalInterest = principal * (annualRate / 100) * (tenorMonths / 12);
+      const totalInterest = principal * (annualRate / 100) * tenorMonths;
       const monthlyInterest = totalInterest / tenorMonths;
       const monthlyPrincipal = principal / tenorMonths;
       let bal = principal;
@@ -83,23 +84,29 @@ const LoanCalculator: React.FC = () => {
 
     // Reducing – Equal EMI
     if (type === "reducing_equal") {
-      const emi =
-        (principal * r * Math.pow(1 + r, tenorMonths)) /
-        (Math.pow(1 + r, tenorMonths) - 1);
+      const monthlyPrincipal = principal / tenorMonths;
+
+      // 1️⃣ Get total interest from reducing declining
+      const totalDecliningInterest = getReducingDecliningInterest(
+        principal,
+        r,
+        tenorMonths
+      );
+
+      // 2️⃣ Spread it evenly
+      const monthlyInterest = totalDecliningInterest / tenorMonths;
+
+      const emi = monthlyPrincipal + monthlyInterest;
 
       let bal = principal;
-      let totalInt = 0;
 
       for (let m = 1; m <= tenorMonths; m++) {
-        const interest = bal * r;
-        const principalPaid = emi - interest;
-        bal -= principalPaid;
-        totalInt += interest;
+        bal -= monthlyPrincipal;
 
         schedule.push({
           month: m,
-          interest,
-          principal: principalPaid,
+          interest: monthlyInterest,
+          principal: monthlyPrincipal,
           payment: emi,
           balance: m === tenorMonths ? 0 : Math.max(0, bal),
         });
@@ -107,8 +114,8 @@ const LoanCalculator: React.FC = () => {
 
       return {
         schedule,
-        totalInterest: totalInt,
-        totalPayable: principal + totalInt,
+        totalInterest: totalDecliningInterest,
+        totalPayable: principal + totalDecliningInterest,
       };
     }
 
