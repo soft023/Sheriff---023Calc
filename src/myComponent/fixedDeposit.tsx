@@ -22,6 +22,7 @@ const FixedDepositCalculator = () => {
     principal: number;
     tenor: number;
     rate: number;
+    total: number;
     grossInterest: number;
     withholdingTax: number;
     netInterest: number;
@@ -57,11 +58,13 @@ const FixedDepositCalculator = () => {
     const grossInterest = (P * R * T) / (100 * 365);
     const withholdingTax = grossInterest * 0.1;
     const netInterest = grossInterest - withholdingTax;
+    const totalPayment = netInterest + P;
 
     setResult({
       principal: P,
       tenor: T,
       rate: R,
+      total: totalPayment,
       grossInterest,
       withholdingTax,
       netInterest,
@@ -153,6 +156,10 @@ const FixedDepositCalculator = () => {
               <Text>
                 <b>Net Interest:</b> ₦
                 {Number(result.netInterest.toFixed(2)).toLocaleString()}
+              </Text>
+              <Text>
+                <b>Total Repayment :</b> ₦
+                {Number(result.total.toFixed(2)).toLocaleString()}
               </Text>
             </VStack>
           </CardBody>
